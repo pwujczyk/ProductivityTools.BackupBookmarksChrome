@@ -14,7 +14,7 @@ function GetBookMarkFileName()
 
 function WriteCheckSum($place, $path)
 {
-	$bookmarkJson=Get-Content  $chromeBookmarkFilePath| ConvertFrom-Json
+	$bookmarkJson=Get-Content  $path| ConvertFrom-Json
 	Write-Verbose "Chrome json $place checksum $($bookmarkJson.checksum)"
 }
 function GetChromeBookmarkFilePath()
@@ -22,7 +22,7 @@ function GetChromeBookmarkFilePath()
 	[string]$bookmarkName=GetBookMarkFileName
 	$chromeBookmarkPath=GetChromeBookMarkPath
 	$chromeBookmarkFilePath="$chromeBookmarkPath\$bookmarkName"
-	WriteCheckSum "source" $chromeBookmarkFilePath
+
 
 	return $chromeBookmarkFilePath
 }
@@ -52,6 +52,7 @@ function Backup-BookmarksChrome{
 	Write-Verbose "Destination directory: $Destination"
 
 	$chromeBookmarkFilePath=GetChromeBookmarkFilePath
+	WriteCheckSum "source" $chromeBookmarkFilePath
 	
 	$destinationDirectory=$Destination
 	if ($ToDateDirectory.IsPresent)
@@ -75,7 +76,16 @@ function Restore-BookmarksChrome
 
 	if($FromLastDateDirectory.IsPresent)
 	{
-		$lastDirectory=Get-ChildItem -Path "$SourceDirectory\$DateNamePrefix*$DateNameSuffix" |Select-Object -Last 1
+		$path="$SourceDirectory\$DateNamePrefix*$DateNameSuffix"
+		try {
+			$lastDirectory=Get-ChildItem -Path $path -ErrorAction Stop |Select-Object -Last 1	
+		}
+		catch {
+			Write-Host "Directory in the $path not exists"
+			Write-Host $_.Exception.Message
+			return;
+		}
+		
 		$SourceDirectory=$lastDirectory
 	}
 
@@ -84,8 +94,9 @@ function Restore-BookmarksChrome
 
 	[string]$bookmarkName=GetBookMarkFileName
 	$sourceFile="$SourceDirectory\$bookmarkName"
+	WriteCheckSum "source" $sourceFile
 	Copy-Item -Recurse -Force -LiteralPath $sourceFile -Destination $chromeBookmarkFilePath
-	WriteCheckSum $chromeBookmarkFilePath
+	WriteCheckSum "dest" $chromeBookmarkFilePath
 }
 
 Export-ModuleMember Restore-BookmarksChrome
