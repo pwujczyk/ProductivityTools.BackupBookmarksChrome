@@ -23,8 +23,56 @@ function GetChromeBookmarkFilePath()
 	$chromeBookmarkPath=GetChromeBookMarkPath
 	$chromeBookmarkFilePath="$chromeBookmarkPath\$bookmarkName"
 
-
 	return $chromeBookmarkFilePath
+}
+
+class GenerateDirectoryParams
+{
+	[string]$Destination;
+	[bool]$ToDateDirectory;
+	[string]$DateNamePrefix;
+	[string]$DateNameSuffix;
+	[bool]$ToPersonalOneDrive;
+	[bool]$ToBusinessOneDrive;
+}
+
+function GenerateDirectoryFromParams()
+{
+	[cmdletbinding()]
+	param ([GenerateDirectoryParams]$params)	
+	#param ([string]$Destination, [switch]$ToDateDirectory, [string]$DateNamePrefix, [string]$DateNameSuffix,
+	#[switch]$ToPersonalOneDrive, [switch]$ToBusinessOneDrive)	
+
+	if (($params.Destination -eq $null -or $params.Destination -eq "") -and ($params.ToPersonalOneDrive -eq $false -and $params.ToBusinessOneDrive -eq $false) )
+	{
+		throw [System.Exception] "Destination directory is required"
+	}
+
+	if ($params.ToPersonalOneDrive)
+	{
+		$oneDriveDir=Get-OneDriveDirectory -Personal -JustDirectory
+		$params.Destination=Join-Path $oneDriveDir $params.Destination
+	}
+
+	if ($params.ToBusinessOneDrive)
+	{
+		$oneDriveDir=Get-OneDriveDirectory -Business -JustDirectory
+		$params.Destination=Join-Path $oneDriveDir $params.Destination
+	}
+
+	if ($ToDateDirectory)
+	{
+		[string]$dateName=Get-DateName -Prefix $DateNamePrefix -Suffix $DateNameSuffix
+		$params.Destination=Join-Path $params.Destination $dateName
+		Write-Verbose "Destination directory with date directory: $params.Destination"
+	}
+
+	return $params.Destination
+}
+
+function GetLastDateDirectory()
+{
+
 }
 
 function Backup-BookmarksChrome{
@@ -32,35 +80,23 @@ function Backup-BookmarksChrome{
 	param ([string]$Destination, [switch]$ToDateDirectory, [string]$DateNamePrefix, [string]$DateNameSuffix,
 	[switch]$ToPersonalOneDrive, [switch]$ToBusinessOneDrive)	
 
-	if (($Destination -eq $null -or $Destination -eq "") -and ($ToPersonalOneDrive.IsPresent -eq $favoritesPath -and $ToBusinessOneDrive.IsPresent -eq $false) )
-	{
-		throw [System.Exception] "Destination directory is required"
-	}
+	$generateDirectoryParams=New-Object GenerateDirectoryParams
+	$generateDirectoryParams.Destination=$Destination
+	$generateDirectoryParams.ToDateDirectory=$ToDateDirectory.IsPresent
+	$generateDirectoryParams.DateNamePrefix=$DateNamePrefix
+	$generateDirectoryParams.DateNameSuffix=$DateNameSuffix
+	$generateDirectoryParams.ToPersonalOneDrive=$ToPersonalOneDrive.IsPresent
+	$generateDirectoryParams.ToBusinessOneDrive=$ToBusinessOneDrive.IsPresent
 
-	if ($ToPersonalOneDrive.IsPresent)
-	{
-		$oneDriveDir=Get-OneDriveDirectory -Personal -JustDirectory
-		$Destination=Join-Path $oneDriveDir $Destination
-	}
 
-	if ($ToBusinessOneDrive.IsPresent)
-	{
-		$oneDriveDir=Get-OneDriveDirectory -Business -JustDirectory
-		$Destination=Join-Path $oneDriveDir $Destination
-	}
+	$Destination=GenerateDirectoryFromParams $generateDirectoryParams
 
 	Write-Verbose "Destination directory: $Destination"
 
 	$chromeBookmarkFilePath=GetChromeBookmarkFilePath
 	WriteCheckSum "source" $chromeBookmarkFilePath
 	
-	$destinationDirectory=$Destination
-	if ($ToDateDirectory.IsPresent)
-	{
-		[string]$dateName=Get-DateName -Prefix $DateNamePrefix -Suffix $DateNameSuffix
-		$destinationDirectory=Join-Path $Destination $dateName
-		Write-Verbose "Destination directory with date directory: $destinationDirectory"
-	}
+
 	
 	Copy-ItemDirectoryRepeatable -Recurse -Force -LiteralPath $chromeBookmarkFilePath -Destination $destinationDirectory #-Verbose:$VerbosePreference 
 	[string]$bookmarkName=GetBookMarkFileName

@@ -28,9 +28,9 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
-    <Compile Include="Backup-BookmarksChrome.psd1" />
-    <Compile Include="Backup-BookmarksChrome.psm1" />
-    <Compile Include="Backup-BookmarksChrome.tests.ps1" />
+    <Compile Include="ProductivityTools.PSBackupBookmarksChrome.psd1" />
+    <Compile Include="ProductivityTools.PSBackupBookmarksChrome.psm1" />
+    <Compile Include="Runner.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
