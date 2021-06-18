@@ -35,9 +35,11 @@ Backup-BookmarksChrome -ToDateDirectory -ToPersonalOneDrive -Destination Chrome
 Backup-BookmarksChrome -ToDateDirectory -DateNamePrefix p -DateNameSuffix s -ToPersonalOneDrive -Destination Chrome
 ```
 
+![](Images/BackupBookMarksChrome.png)
+
 Module allows to restore data from chosen directory and from last date directory.
 
 ```powershell
 Restore-BookmarksChrome "D:\OneDrive\ChromeBackup\" -FromLastDateDirectory -verbose
 ```
-
+![](Images/RestoreBookMarksChromeOneDrive.png)
