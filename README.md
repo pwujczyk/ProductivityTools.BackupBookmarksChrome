@@ -19,7 +19,7 @@ Chrome synchronizes the bookmarks in the clould but if you would like to have of
 Chrome bookmarks are stored in user directory in **C:\\Users\\Pawel\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Bookmarks** file. Bookmarks are stored in the json file without extension.
 
 <!--og-image-->
-![](Images\ChromeJson.png)
+![](Images/ChromeJson.png)
 
 Module takes bookmarks file for logged user and copy it to chosen directory.
 
